@@ -1,5 +1,5 @@
 function generateRandomString() {
-  let string = Math.random().toString(36).substring(7);
+  let string = Math.random().toString(36).substring(2,8);
   return string;
   };
 
