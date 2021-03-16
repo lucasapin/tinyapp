@@ -24,9 +24,13 @@
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td><td><form method="post" action="/urls/<%= url %>/edit">
+            <td><%= urls[url] %></td>
+            <!-- <td><form method="post" action="/urls/<%= url %>/edit">
               <input class="btn btn-info" type="submit" value="Edit">
             </form>
+          </td> -->
+          <td>
+            <a class="btn btn-info px-3" href="/urls/<%=url%>">Edit</a>
           </td>
             <td><form method="post" action="/urls/<%= url %>/delete">
               <input class="btn btn-warning" type="submit" value="Delete">
