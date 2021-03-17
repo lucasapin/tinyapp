@@ -35,34 +35,64 @@ const usersDatabase = {
 
 //Get request to see the create new tinyURL page
 app.get("/urls/new", (req, res) => {
+  const user = usersDatabase[req.cookies["user_id"]]
   const templateVars = {
-    username: req.cookies["username"], user_id: req.cookies["user_id"]}
+    user_id: req.cookies["user_id"], user}
   res.render("urls_new", templateVars);
 });
 
 //render the register page with the form
 app.get("/register", (req, res) => {
+  const user = usersDatabase[req.cookies["user_id"]]
   const templateVars = {
-    username: req.cookies["username"], user_id: req.cookies["user_id"]}
+    user_id: req.cookies["user_id"], user}
   res.render("user_registration", templateVars)
 });
+//helper function to validate the user
+const emailLookup = (user, userDatabase) => {
+  const {email} = user
+  for (const key in userDatabase) {
+    if (email === userDatabase[key].email) {
+      return userDatabase[key]
+    }
+  }
+  return false
+}
 
 // handler for the registration form
 app.post("/register", (req, res) => {
-  const id = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
-  usersDatabase[id] = {id, email, password}
-  res.cookie("user_id", id);
-  res.redirect("/urls")
-});
+  newUser = {email, password} = req.body
+
+  if (emailLookup(newUser, usersDatabase)) {
+    res.status(400).send('Email already exists!');
+  } else {
+    id = generateRandomString()
+    usersDatabase[id] = {id, email, password}
+    res.cookie('user_id', id)
+    res.redirect('/urls')
+  }
+})
+
+app.get("/login", (req, res) => {
+  const user = usersDatabase[req.cookies["user_id"]]
+  const templateVars = { user_id: req.cookies["user_id"], user};
+  res.render("login_form", templateVars)
+})
 
 //Handle a POST request to /login -->
 app.post("/login", (req, res) =>{
-  const username = req.body.username
-  res.cookie("username", username);
-  res.redirect("/urls");
+  const user = emailLookup(req.body, usersDatabase)
+  if(!user) {
+    res.status(403).send("User not found!")
+  } else {
+  if(user.password === req.body.password) {
+    res.cookie("user_id", user.id).redirect('/urls')
+  } else {
+    res.status(403).send("Wrong password")
+  }
+}
 })
+
 // create the logout logic
 app.post("/logout", (req, res) =>{
   res.clearCookie("user_id");
@@ -93,12 +123,14 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"], user_id: req.cookies["user_id"]};
+  const user = usersDatabase[req.cookies["user_id"]]
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user_id: req.cookies["user_id"], user};
   res.render("urls_show", templateVars)
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies["username"], user_id: req.cookies["user_id"], email: req.cookies["email"]};
+  const user = usersDatabase[req.cookies["user_id"]]
+  const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email: req.cookies["email"], user};
 res.render("urls_index", templateVars)
 });
 
