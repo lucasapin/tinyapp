@@ -10,13 +10,13 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if(username) { %> 
+    <% if(user_id) { %> 
       <span class="mx-3">Logged in: <%= username %> </span>
       <form method="POST" action="/logout">
       <button type="submit" class="btn btn-danger">Logout</button>
     </form>
     <% } %> 
-    <% if(!username) { %> 
+    <% if(!user_id) { %> 
     <form method="POST" action="/login">
       <input name="username" class="btn btn-light" placeholder="Username">
       <button type="submit" class="btn btn-outline-dark">Login</button>
