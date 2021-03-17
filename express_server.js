@@ -14,10 +14,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const usersDatabase = {
@@ -38,7 +37,12 @@ app.get("/urls/new", (req, res) => {
   const user = usersDatabase[req.cookies["user_id"]];
   const templateVars = {
     user_id: req.cookies["user_id"], user};
-  res.render("urls_new", templateVars);
+    if(!user) {
+      res.redirect("/login");
+    } 
+    else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 //render the register page with the form
@@ -101,13 +105,13 @@ app.post("/logout", (req, res) =>{
 
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.cookies["user_id"]};
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
   const urlToRedirect = req.params.shortURL;
-  urlDatabase[urlToRedirect] = req.body.longURL;
+  urlDatabase[urlToRedirect].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
@@ -118,13 +122,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const user = usersDatabase[req.cookies["user_id"]];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user_id: req.cookies["user_id"], user};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user_id: req.cookies["user_id"], user};
   res.render("urls_show", templateVars);
 });
 
@@ -137,8 +141,6 @@ app.get("/urls", (req, res) => {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
