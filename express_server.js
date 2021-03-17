@@ -20,12 +20,42 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const usersDatabase = { 
+  "b2xVn2": {
+    id: "b2xVn2",
+    email: "user@example.com",
+    password: "test"
+  },
+ "9sm5xK": {
+    id: "9sm5xK",
+    email: "user2@example.com",
+    password: "test2"
+  }
+}
+
 //Get request to see the create new tinyURL page
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     username: req.cookies["username"],
   }
   res.render("urls_new", templateVars);
+});
+
+//render the register page with the form
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]}
+  res.render("user_registration", templateVars)
+});
+
+// handler for the registration form
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  usersDatabase[id] = {id, email, password}
+  res.cookie("user_id", id);
+  res.redirect("/urls")
 });
 
 //Handle a POST request to /login -->
