@@ -1,25 +1,19 @@
-//Create a Function that generates a random 6-char long string
-const generateRandomString = function() {
-  let string = Math.random().toString(36).substring(2,8);
-  return string;
-};
-
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const { generateRandomString, emailLookup, urlsForUser} = require("./helpers");
 const saltRounds = 10;
 
 const PORT = 8080; // default port 8080
-
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
-}))
+}));
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -44,10 +38,9 @@ app.get("/urls/new", (req, res) => {
   const user = usersDatabase[req.session["user_id"]];
   const templateVars = {
     user_id: req.session["user_id"], user};
-    if(!user) {
-      res.redirect("/login");
-    } 
-    else {
+  if (!user) {
+    res.redirect("/login");
+  } else {
     res.render("urls_new", templateVars);
   }
 });
@@ -59,37 +52,17 @@ app.get("/register", (req, res) => {
     user_id: req.session["user_id"], user};
   res.render("user_registration", templateVars);
 });
-//helper function to validate the user
-const emailLookup = (user, userDatabase) => {
-  const {email} = user;
-  for (const key in userDatabase) {
-    if (email === userDatabase[key].email) {
-      return userDatabase[key];
-    }
-  }
-  return false;
-};
-
-const urlsForUser = function(id) {
-  const filteredURL = {};
-  for(let url in urlDatabase) {
-    if(urlDatabase[url].userID === id ){
-      filteredURL[url] = urlDatabase[url]
-    }     
-  } return filteredURL
-  }
 
 
 // handler for the registration form
 app.post("/register", (req, res) => {
   if (!req.body.email || !req.body.password) {
-    res.status(400).send("Email and password are mandatories!")
-    return
+    res.status(400).send("Email and password are mandatories!");
+    return;
   }
   const {email, password} = req.body;
   const salt = bcrypt.genSaltSync(saltRounds);
   const hash = bcrypt.hashSync(password, salt);
-  console.log("hash --->", hash)
   const newUser = {email, password: hash};
   if (emailLookup(newUser, usersDatabase)) {
     res.status(400).send('Email already exists!');
@@ -113,9 +86,9 @@ app.post("/login", (req, res) =>{
   if (!user) {
     res.status(403).send("User not found!");
   } else {
-    const checkPassword = bcrypt.compareSync(req.body.password, user.password)
+    const checkPassword = bcrypt.compareSync(req.body.password, user.password);
     if (checkPassword) {
-      req.session["user_id"] = user.id
+      req.session["user_id"] = user.id;
       res.redirect('/urls');
     } else {
       res.status(403).send("Wrong password");
@@ -139,11 +112,11 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   const urlToRedirect = req.params.shortURL;
   const user = req.session["user_id"];
   const test = urlsForUser(user);
-  if(test[urlToRedirect]){
-  urlDatabase[urlToRedirect].longURL = req.body.longURL;
-  res.redirect("/urls");
+  if (test[urlToRedirect]) {
+    urlDatabase[urlToRedirect].longURL = req.body.longURL;
+    res.redirect("/urls");
   } else {
-    res.status(403).send("You are not allowed to do that!")
+    res.status(403).send("You are not allowed to do that!");
   }
 });
 
@@ -151,11 +124,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const urlToDelete = req.params.shortURL;
   const user = req.session["user_id"];
   const test = urlsForUser(user);
-  if(test[urlToDelete]){
-  delete urlDatabase[urlToDelete];
-  res.redirect("/urls");
+  if (test[urlToDelete]) {
+    delete urlDatabase[urlToDelete];
+    res.redirect("/urls");
   } else {
-    res.status(403).send("You are not allowed to do that!")
+    res.status(403).send("You are not allowed to do that!");
   }
 });
 
@@ -172,15 +145,15 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = usersDatabase[req.session["user_id"]];
-  let userURL = urlsForUser(req.session["user_id"]);
+  let userURL = urlsForUser(req.session["user_id"], urlDatabase);
   const templateVars = { urls: userURL, user_id: req.session["user_id"], email: req.session["email"], user};
   res.render("urls_index", templateVars);
 });
 
 app.get("/", (req, res) => {
-  const user = req.session["user_id"]
-  if(user){
-  res.redirect("/urls");
+  const user = req.session["user_id"];
+  if (user) {
+    res.redirect("/urls");
   } else {
     res.redirect("/login");
   }
