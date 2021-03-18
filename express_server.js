@@ -51,9 +51,69 @@ app.get("/register", (req, res) => {
   const user = usersDatabase[req.session["user_id"]];
   const templateVars = {
     user_id: req.session["user_id"], user};
-  res.render("user_registration", templateVars);
+  if (!user) {
+    res.render("user_registration", templateVars);
+  } else {
+    res.redirect("/urls");
+  }
 });
 
+// Display the login page
+app.get("/login", (req, res) => {
+  const user = usersDatabase[req.session["user_id"]];
+  const templateVars = { user_id: req.session["user_id"], user};
+  if (!user) {
+    res.render("login_form", templateVars);
+  }
+  if (user) {
+    res.redirect("/urls");
+  }
+});
+
+// Handler that redirects to the actual website that we are shorting the URL
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
+});
+
+// Handler to display a URL, with its long and short version
+app.get("/urls/:shortURL", (req, res) => {
+  const user = usersDatabase[req.session["user_id"]];
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user_id: req.session["user_id"], user};
+  if (!urlDatabase[req.params.shortURL]) {
+    res.render("error_form", templateVars);
+  }
+  if (urlDatabase[req.params.shortURL].userID !== req.session["user_id"]) {
+    res.render("error_form", templateVars);
+  }
+  if (!user) {
+    res.render("error_form", templateVars);
+  } else {
+    res.render("urls_show", templateVars);
+  }
+});
+
+// Display all the URL's created by the specific user
+app.get("/urls", (req, res) => {
+  const user = usersDatabase[req.session["user_id"]];
+  let userURL = urlsForUser(req.session["user_id"], urlDatabase);
+  const templateVars = { urls: userURL, user_id: req.session["user_id"], email: req.session["email"], user};
+  if (!user) {
+    res.render("error_form", templateVars);
+  } else {
+    res.render("urls_index", templateVars);
+  }
+});
+
+// Home page, redirects to either the urls the user has created, or to the login page if user is not logged in.
+app.get("/", (req, res) => {
+  const user = req.session["user_id"];
+  if (user) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+});
 
 // handler for the registration form
 app.post("/register", (req, res) => {
@@ -73,12 +133,6 @@ app.post("/register", (req, res) => {
     req.session["user_id"] = id;
     res.redirect('/urls');
   }
-});
-// Display the login page
-app.get("/login", (req, res) => {
-  const user = usersDatabase[req.session["user_id"]];
-  const templateVars = { user_id: req.session["user_id"], user};
-  res.render("login_form", templateVars);
 });
 
 //Handle a POST request to /login -->
@@ -101,13 +155,6 @@ app.post("/login", (req, res) =>{
 app.post("/logout", (req, res) =>{
   req.session["user_id"] = null;
   res.redirect("/urls");
-});
-
-// Handler to create a new short url
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session["user_id"]};
-  res.redirect(`/urls/${shortURL}`);
 });
 
 // Handler to update a the URL
@@ -136,43 +183,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-// Handler that redirects to the actual website that we are shorting the URL
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-});
-
-// Handler to display a URL, with its long and short version
-app.get("/urls/:shortURL", (req, res) => {
-  const user = usersDatabase[req.session["user_id"]];
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user_id: req.session["user_id"], user};
-  if (!user) {
-    res.render("error_form", templateVars);
-  } else {
-    res.render("urls_show", templateVars);
-  }
-});
-
-// Display all the URL's created by the specific user
-app.get("/urls", (req, res) => {
-  const user = usersDatabase[req.session["user_id"]];
-  let userURL = urlsForUser(req.session["user_id"], urlDatabase);
-  const templateVars = { urls: userURL, user_id: req.session["user_id"], email: req.session["email"], user};
-  if (!user) {
-    res.render("error_form", templateVars);
-  } else {
-    res.render("urls_index", templateVars);
-  }
-});
-
-// Home page, redirects to either the urls the user has created, or to the login page if user is not logged in.
-app.get("/", (req, res) => {
-  const user = req.session["user_id"];
-  if (user) {
-    res.redirect("/urls");
-  } else {
-    res.redirect("/login");
-  }
+// Handler to create a new short url
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {longURL: req.body.longURL, userID: req.session["user_id"]};
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.listen(PORT, () => {
