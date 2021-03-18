@@ -63,6 +63,16 @@ const emailLookup = (user, userDatabase) => {
   return false;
 };
 
+const urlsForUser = function(id) {
+  const filteredURL = {};
+  for(let url in urlDatabase) {
+    if(urlDatabase[url].userID === id ){
+      filteredURL[url] = urlDatabase[url]
+    }     
+  } return filteredURL
+  }
+
+
 // handler for the registration form
 app.post("/register", (req, res) => {
   const newUser = {email, password} = req.body;
@@ -111,14 +121,26 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/edit", (req, res) => {
   const urlToRedirect = req.params.shortURL;
+  const user = req.cookies["user_id"];
+  const test = urlsForUser(user);
+  if(test[urlToRedirect]){
   urlDatabase[urlToRedirect].longURL = req.body.longURL;
   res.redirect("/urls");
+  } else {
+    res.status(403).send("You are not allowed to do that!")
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const urlToDelete = req.params.shortURL;
+  const user = req.cookies["user_id"];
+  const test = urlsForUser(user);
+  if(test[urlToDelete]){
   delete urlDatabase[urlToDelete];
   res.redirect("/urls");
+  } else {
+    res.status(403).send("You are not allowed to do that!")
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -134,7 +156,8 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = usersDatabase[req.cookies["user_id"]];
-  const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email: req.cookies["email"], user};
+  let userURL = urlsForUser(req.cookies["user_id"]);
+  const templateVars = { urls: userURL, user_id: req.cookies["user_id"], email: req.cookies["email"], user};
   res.render("urls_index", templateVars);
 });
 
