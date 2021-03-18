@@ -111,7 +111,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/edit", (req, res) => {
   const urlToRedirect = req.params.shortURL;
   const user = req.session["user_id"];
-  const test = urlsForUser(user);
+  const test = urlsForUser(user, urlDatabase);
   if (test[urlToRedirect]) {
     urlDatabase[urlToRedirect].longURL = req.body.longURL;
     res.redirect("/urls");
@@ -123,7 +123,7 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const urlToDelete = req.params.shortURL;
   const user = req.session["user_id"];
-  const test = urlsForUser(user);
+  const test = urlsForUser(user, urlDatabase);
   if (test[urlToDelete]) {
     delete urlDatabase[urlToDelete];
     res.redirect("/urls");
