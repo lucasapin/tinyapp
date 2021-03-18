@@ -5,7 +5,7 @@ const generateRandomString = function() {
 };
 
 const emailLookup = (user, userDatabase) => {
-  const {email} = user;
+  const email = user;
   for (const key in userDatabase) {
     if (email === userDatabase[key].email) {
       return userDatabase[key];
@@ -16,12 +16,12 @@ const emailLookup = (user, userDatabase) => {
 
 const urlsForUser = function(id, urlDatabase) {
   const filteredURL = {};
-  for(let url in urlDatabase) {
-    if(urlDatabase[url].userID === id ){
-      filteredURL[url] = urlDatabase[url]
-    }     
-  } return filteredURL
-  }
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      filteredURL[url] = urlDatabase[url];
+    }
+  } return filteredURL;
+};
 
 
-  module.exports = { generateRandomString, emailLookup, urlsForUser }
+module.exports = { generateRandomString, emailLookup, urlsForUser };
