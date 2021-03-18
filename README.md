@@ -4,8 +4,10 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["screenshot description"](#)
-!["screenshot description"](#)
+!["Create a new user page. It only takes an email and password"](https://github.com/lucasapin/tinyapp/blob/master/docs/create_user.png?raw=true)
+!["Update an existing URL."](https://github.com/lucasapin/tinyapp/blob/master/docs/edit_url_page.png?raw=true)
+!["Urls main page. It lists all the short URL's create by the user."](https://github.com/lucasapin/tinyapp/blob/master/docs/urls_page.png?raw=true)
+
 
 ## Dependencies
 
