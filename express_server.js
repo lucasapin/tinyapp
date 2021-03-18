@@ -6,12 +6,14 @@ const generateRandomString = function() {
 
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const PORT = 8080; // default port 8080
 
 app.set('view engine', 'ejs');
-const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 const urlDatabase = {
@@ -75,13 +77,16 @@ const urlsForUser = function(id) {
 
 // handler for the registration form
 app.post("/register", (req, res) => {
-  const newUser = {email, password} = req.body;
-
+  const {email, password} = req.body;
+  const salt = bcrypt.genSaltSync(saltRounds);
+  const hash = bcrypt.hashSync(password, salt);
+  console.log("hash --->", hash)
+  const newUser = {email, password: hash};
   if (emailLookup(newUser, usersDatabase)) {
     res.status(400).send('Email already exists!');
   } else {
     const id = generateRandomString();
-    usersDatabase[id] = {id, email, password};
+    usersDatabase[id] = {id, email, password: hash};
     res.cookie('user_id', id);
     res.redirect('/urls');
   }
@@ -99,7 +104,8 @@ app.post("/login", (req, res) =>{
   if (!user) {
     res.status(403).send("User not found!");
   } else {
-    if (user.password === req.body.password) {
+    const checkPassword = bcrypt.compareSync(req.body.password, user.password)
+    if (checkPassword) {
       res.cookie("user_id", user.id).redirect('/urls');
     } else {
       res.status(403).send("Wrong password");
@@ -162,7 +168,12 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = req.cookies["user_id"]
+  if(user){
+  res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.listen(PORT, () => {
